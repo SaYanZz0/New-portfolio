@@ -1,0 +1,347 @@
+---
+title: "Text to Image Synthesis using Generative Adversarial Networks"
+description: "A comprehensive guide to implementing text-to-image generation using GANs with Skip-Thought Vectors for natural language understanding."
+date: 2024-03-20
+tags: ["Deep Learning", "GAN", "Computer Vision", "NLP", "Text-to-Image"]
+published: true
+---
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Architecture Overview](#architecture-overview)
+3. [Implementation Details](#implementation-details)
+4. [Training Process](#training-process)
+5. [Results and Analysis](#results-and-analysis)
+6. [Conclusion](#conclusion)
+
+---
+
+## Introduction
+
+Text-to-image synthesis represents one of the most fascinating intersections of computer vision and natural language processing. This implementation is an experimental TensorFlow implementation of synthesizing images from captions using Skip Thought Vectors. The images are synthesized using the GAN-CLS Algorithm from the paper "Generative Adversarial Text-to-Image Synthesis."
+
+---
+
+## Architecture Overview
+
+Our model architecture is based on the GAN-CLS approach, which extends the traditional GAN framework to incorporate text information. The model consists of two main components:
+
+1. **Generator**: Creates images from random noise conditioned on text embeddings
+2. **Discriminator**: Evaluates image-text pairs for authenticity
+
+![Model Architecture](http://i.imgur.com/dNl2HkZ.jpg)
+
+<div align="center">
+  Figure: System architecture for text-to-image synthesis
+</div>
+
+---
+
+## Implementation Details
+
+Here's the complete implementation of our Text-to-Image GAN model:
+
+```python
+import tensorflow as tf
+from Utils import ops
+
+class GAN:
+	'''
+	OPTIONS
+	z_dim : Noise dimension 100
+	t_dim : Text feature dimension 256
+	image_size : Image Dimension 64
+	gf_dim : Number of conv in the first layer generator 64
+	df_dim : Number of conv in the first layer discriminator 64
+	gfc_dim : Dimension of gen untis for for fully connected layer 1024
+	caption_vector_length : Caption Vector Length 2400
+	batch_size : Batch Size 64
+	'''
+	def __init__(self, options):
+		self.options = options
+
+		self.g_bn0 = ops.batch_norm(name='g_bn0')
+		self.g_bn1 = ops.batch_norm(name='g_bn1')
+		self.g_bn2 = ops.batch_norm(name='g_bn2')
+		self.g_bn3 = ops.batch_norm(name='g_bn3')
+
+		self.d_bn1 = ops.batch_norm(name='d_bn1')
+		self.d_bn2 = ops.batch_norm(name='d_bn2')
+		self.d_bn3 = ops.batch_norm(name='d_bn3')
+		self.d_bn4 = ops.batch_norm(name='d_bn4')
+
+
+	def build_model(self):
+		img_size = self.options['image_size']
+		t_real_image = tf.placeholder('float32', [self.options['batch_size'],img_size, img_size, 3 ], name = 'real_image')
+		t_wrong_image = tf.placeholder('float32', [self.options['batch_size'],img_size, img_size, 3 ], name = 'wrong_image')
+		t_real_caption = tf.placeholder('float32', [self.options['batch_size'], self.options['caption_vector_length']], name = 'real_caption_input')
+		t_z = tf.placeholder('float32', [self.options['batch_size'], self.options['z_dim']])
+
+		fake_image = self.generator(t_z, t_real_caption)
+
+		disc_real_image, disc_real_image_logits   = self.discriminator(t_real_image, t_real_caption)
+		disc_wrong_image, disc_wrong_image_logits   = self.discriminator(t_wrong_image, t_real_caption, reuse = True)
+		disc_fake_image, disc_fake_image_logits   = self.discriminator(fake_image, t_real_caption, reuse = True)
+
+		g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(disc_fake_image_logits, tf.ones_like(disc_fake_image)))
+
+		d_loss1 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(disc_real_image_logits, tf.ones_like(disc_real_image)))
+		d_loss2 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(disc_wrong_image_logits, tf.zeros_like(disc_wrong_image)))
+		d_loss3 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(disc_fake_image_logits, tf.zeros_like(disc_fake_image)))
+
+		d_loss = d_loss1 + d_loss2 + d_loss3
+
+		t_vars = tf.trainable_variables()
+		d_vars = [var for var in t_vars if 'd_' in var.name]
+		g_vars = [var for var in t_vars if 'g_' in var.name]
+
+		input_tensors = {
+			't_real_image' : t_real_image,
+			't_wrong_image' : t_wrong_image,
+			't_real_caption' : t_real_caption,
+			't_z' : t_z
+		}
+
+		variables = {
+			'd_vars' : d_vars,
+			'g_vars' : g_vars
+		}
+
+		loss = {
+			'g_loss' : g_loss,
+			'd_loss' : d_loss
+		}
+
+		outputs = {
+			'generator' : fake_image
+		}
+
+		checks = {
+			'd_loss1': d_loss1,
+			'd_loss2': d_loss2,
+			'd_loss3' : d_loss3,
+			'disc_real_image_logits' : disc_real_image_logits,
+			'disc_wrong_image_logits' : disc_wrong_image,
+			'disc_fake_image_logits' : disc_fake_image_logits
+		}
+
+		return input_tensors, variables, loss, outputs, checks
+
+	def build_generator(self):
+		img_size = self.options['image_size']
+		t_real_caption = tf.placeholder('float32', [self.options['batch_size'], self.options['caption_vector_length']], name = 'real_caption_input')
+		t_z = tf.placeholder('float32', [self.options['batch_size'], self.options['z_dim']])
+		fake_image = self.sampler(t_z, t_real_caption)
+
+		input_tensors = {
+			't_real_caption' : t_real_caption,
+			't_z' : t_z
+		}
+
+		outputs = {
+			'generator' : fake_image
+		}
+
+		return input_tensors, outputs
+
+	# Sample Images for a text embedding
+	def sampler(self, t_z, t_text_embedding):
+		tf.get_variable_scope().reuse_variables()
+
+		s = self.options['image_size']
+		s2, s4, s8, s16 = int(s/2), int(s/4), int(s/8), int(s/16)
+
+		reduced_text_embedding = ops.lrelu( ops.linear(t_text_embedding, self.options['t_dim'], 'g_embedding') )
+		z_concat = tf.concat(1, [t_z, reduced_text_embedding])
+		z_ = ops.linear(z_concat, self.options['gf_dim']*8*s16*s16, 'g_h0_lin')
+		h0 = tf.reshape(z_, [-1, s16, s16, self.options['gf_dim'] * 8])
+		h0 = tf.nn.relu(self.g_bn0(h0, train = False))
+
+		h1 = ops.deconv2d(h0, [self.options['batch_size'], s8, s8, self.options['gf_dim']*4], name='g_h1')
+		h1 = tf.nn.relu(self.g_bn1(h1, train = False))
+
+		h2 = ops.deconv2d(h1, [self.options['batch_size'], s4, s4, self.options['gf_dim']*2], name='g_h2')
+		h2 = tf.nn.relu(self.g_bn2(h2, train = False))
+
+		h3 = ops.deconv2d(h2, [self.options['batch_size'], s2, s2, self.options['gf_dim']*1], name='g_h3')
+		h3 = tf.nn.relu(self.g_bn3(h3, train = False))
+
+		h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
+
+		return (tf.tanh(h4)/2. + 0.5)
+
+	# GENERATOR IMPLEMENTATION based on : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
+	def generator(self, t_z, t_text_embedding):
+
+		s = self.options['image_size']
+		s2, s4, s8, s16 = int(s/2), int(s/4), int(s/8), int(s/16)
+
+		reduced_text_embedding = ops.lrelu( ops.linear(t_text_embedding, self.options['t_dim'], 'g_embedding') )
+		z_concat = tf.concat(1, [t_z, reduced_text_embedding])
+		z_ = ops.linear(z_concat, self.options['gf_dim']*8*s16*s16, 'g_h0_lin')
+		h0 = tf.reshape(z_, [-1, s16, s16, self.options['gf_dim'] * 8])
+		h0 = tf.nn.relu(self.g_bn0(h0))
+
+		h1 = ops.deconv2d(h0, [self.options['batch_size'], s8, s8, self.options['gf_dim']*4], name='g_h1')
+		h1 = tf.nn.relu(self.g_bn1(h1))
+
+		h2 = ops.deconv2d(h1, [self.options['batch_size'], s4, s4, self.options['gf_dim']*2], name='g_h2')
+		h2 = tf.nn.relu(self.g_bn2(h2))
+
+		h3 = ops.deconv2d(h2, [self.options['batch_size'], s2, s2, self.options['gf_dim']*1], name='g_h3')
+		h3 = tf.nn.relu(self.g_bn3(h3))
+
+		h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
+
+		return (tf.tanh(h4)/2. + 0.5)
+
+	# DISCRIMINATOR IMPLEMENTATION based on : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
+	def discriminator(self, image, t_text_embedding, reuse=False):
+		if reuse:
+			tf.get_variable_scope().reuse_variables()
+
+		h0 = ops.lrelu(ops.conv2d(image, self.options['df_dim'], name = 'd_h0_conv')) #32
+		h1 = ops.lrelu( self.d_bn1(ops.conv2d(h0, self.options['df_dim']*2, name = 'd_h1_conv'))) #16
+		h2 = ops.lrelu( self.d_bn2(ops.conv2d(h1, self.options['df_dim']*4, name = 'd_h2_conv'))) #8
+		h3 = ops.lrelu( self.d_bn3(ops.conv2d(h2, self.options['df_dim']*8, name = 'd_h3_conv'))) #4
+
+		# ADD TEXT EMBEDDING TO THE NETWORK
+		reduced_text_embeddings = ops.lrelu(ops.linear(t_text_embedding, self.options['t_dim'], 'd_embedding'))
+		reduced_text_embeddings = tf.expand_dims(reduced_text_embeddings,1)
+		reduced_text_embeddings = tf.expand_dims(reduced_text_embeddings,2)
+		tiled_embeddings = tf.tile(reduced_text_embeddings, [1,4,4,1], name='tiled_embeddings')
+
+		h3_concat = tf.concat( 3, [h3, tiled_embeddings], name='h3_concat')
+		h3_new = ops.lrelu( self.d_bn4(ops.conv2d(h3_concat, self.options['df_dim']*8, 1,1,1,1, name = 'd_h3_conv_new'))) #4
+
+		h4 = ops.linear(tf.reshape(h3_new, [self.options['batch_size'], -1]), 1, 'd_h3_lin')
+
+		return tf.nn.sigmoid(h4), h4
+```
+
+---
+
+## Training Process
+
+The training process involves several important components:
+
+### Data Preparation
+
+The model is trained on the flowers dataset, which contains images paired with textual descriptions. We use Skip-Thought Vectors to encode these textual descriptions.
+
+### The GAN-CLS Algorithm
+
+The GAN-CLS algorithm extends the traditional GAN training procedure by incorporating a three-way classification:
+
+1. **Real Images + Matching Text**: Should be classified as real
+2. **Real Images + Mismatched Text**: Should be classified as fake
+3. **Generated Images + Text**: Should be classified as fake
+
+This approach forces the discriminator to learn not just what makes an image look real, but also what makes an image match its textual description.
+
+### Training Steps
+
+```python
+def train(model, dataset, options):
+    # Setup optimizers
+    d_optim = tf.train.AdamOptimizer(options['learning_rate'], beta1=options['beta1']).minimize(model['d_loss'], var_list=model['d_vars'])
+    g_optim = tf.train.AdamOptimizer(options['learning_rate'], beta1=options['beta1']).minimize(model['g_loss'], var_list=model['g_vars'])
+
+    # Initialize variables
+    init = tf.global_variables_initializer()
+    sess = tf.Session()
+    sess.run(init)
+
+    # Main training loop
+    for epoch in range(options['max_epochs']):
+        batch_idxs = len(dataset) // options['batch_size']
+
+        for idx in range(batch_idxs):
+            # Get batch data
+            batch_images, batch_wrong_images, batch_captions = dataset.next_batch()
+            batch_z = np.random.normal(0, 1, [options['batch_size'], options['z_dim']])
+
+            # Update D network
+            _, d_loss = sess.run(
+                [d_optim, model['d_loss']],
+                feed_dict={
+                    model['t_real_image']: batch_images,
+                    model['t_wrong_image']: batch_wrong_images,
+                    model['t_real_caption']: batch_captions,
+                    model['t_z']: batch_z
+                })
+
+            # Update G network
+            _, g_loss = sess.run(
+                [g_optim, model['g_loss']],
+                feed_dict={
+                    model['t_real_caption']: batch_captions,
+                    model['t_z']: batch_z
+                })
+
+            # Log progress
+            if idx % 10 == 0:
+                print(f"Epoch [{epoch}/{options['max_epochs']}] Batch [{idx}/{batch_idxs}] d_loss: {d_loss:.4f}, g_loss: {g_loss:.4f}")
+
+            # Save sample images
+            if idx % 100 == 0:
+                samples = sess.run(
+                    model['generator'],
+                    feed_dict={
+                        model['t_real_caption']: batch_captions,
+                        model['t_z']: batch_z
+                    })
+                save_images(samples, f'samples/epoch_{epoch}_batch_{idx}.png')
+```
+
+---
+
+## Results and Analysis
+
+Our model successfully generates images that correspond to the input text descriptions. Here are some example results:
+
+| Caption                                                                       | Generated Image                                                    |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| "this flower has petals that are yellow, white and purple and has dark lines" | ![Yellow, white and purple flower](http://i.imgur.com/8zsv9Nc.jpg) |
+| "the petals on this flower are white with a yellow center"                    | ![White flower with yellow center](http://i.imgur.com/vvzv1cE.jpg) |
+| "this flower has a lot of small round pink petals."                           | ![Flower with pink petals](http://i.imgur.com/w0zK1DC.jpg)         |
+
+### Qualitative Analysis
+
+The generated images show good correspondence with their textual descriptions, particularly for common visual attributes like color and basic shapes. For example:
+
+1. The first image accurately captures the yellow, white, and purple colors mentioned in the description, along with some darker lines.
+2. The second image clearly shows white petals with a yellow center, demonstrating the model's ability to understand basic color positioning.
+3. The third image depicts small round pink petals, though the roundness is not perfectly captured.
+
+While the 64×64 resolution limits the detail, these results demonstrate that the model successfully learned to associate textual features with visual characteristics.
+
+### Limitations and Challenges
+
+Several challenges were encountered during implementation:
+
+1. **Mode Collapse**: The generator sometimes produces similar images regardless of different text inputs
+2. **Training Stability**: GAN training can be unstable and sensitive to hyperparameters
+3. **Resolution Constraints**: The current implementation is limited to 64×64 pixel images
+4. **Complex Attributes**: While simple color descriptions are handled well, more complex attributes like texture or detailed shapes remain challenging
+
+---
+
+## Conclusion
+
+This implementation demonstrates the feasibility of generating images from textual descriptions using GAN-CLS and Skip-Thought Vectors. While the results are promising, there is still substantial room for improvement in terms of image quality, diversity, and text alignment.
+
+Future work could explore:
+
+- Higher resolution image generation
+- More sophisticated text encodings
+- Attention mechanisms for better text-to-image alignment
+- Improved training techniques for enhanced stability
+
+---
+
+## Project Links
+
+- **GitHub Repository**: [Link to GitHub Repo](https://github.com/SaYanZz0/text-to-Image-Synthesis-using-GAN)
