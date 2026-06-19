@@ -1,4 +1,4 @@
-export default function () {
+export default function Header() {
     return <div className="text-center space-y-4 py-5 my-5">
         <h3 className="font-bold text-4xl">
             Explore My Work

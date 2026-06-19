@@ -3,7 +3,7 @@ import { ReactElement } from "react";
 import { Button } from "@/components/ui/button";
 
 
-export default function ({ icon, link, variant }: { icon: ReactElement, link: string, variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined }) {
+export default function CTA({ icon, link, variant }: { icon: ReactElement, link: string, variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined }) {
 
 
     return <Button variant={variant}>

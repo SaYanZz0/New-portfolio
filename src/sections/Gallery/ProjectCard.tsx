@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useRef } from "react"
-export default function ({ project }: { project: ProjectType }) {
+export default function ProjectCard({ project }: { project: ProjectType }) {
     const boxRef = useRef(null)
     const { scrollYProgress } = useScroll({
         target: boxRef,

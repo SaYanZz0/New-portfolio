@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import HeroImage from "../../images/HeroImage.jpg"
 
-export default function () {
+export default function Hero() {
     return <main className="px-4 py-10 sm:px-20 lg:px-40 max-w-[2000px] m-auto flex flex-col md:flex-row justify-between items-center h-fit md:h-[calc(100dvh-73px)] w-full gap-10">
         <div className="w-full md:w-6/12 space-y-3">
             <h1 className="text-5xl leading-normal font-bold">

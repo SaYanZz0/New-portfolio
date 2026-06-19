@@ -3,7 +3,7 @@ import Link from "../Navbar/Link";
 import CTA from "../Navbar/CTA";
 import { LinkType } from "@/types/Link";
 
-export default function () {
+export default function Footer() {
   const Links: LinkType[] = [
     {
       link: "/#Projects",

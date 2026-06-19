@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { useRef } from "react";
 
-export default function () {
+export default function Timeline() {
   const data = [
     {
       orientation: "left",

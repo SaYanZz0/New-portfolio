@@ -9,7 +9,7 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-export default function ({ form, name, placeholder, label }: { form: any, name: string, label: string, placeholder: string }) {
+export default function RHFInput({ form, name, placeholder, label }: { form: any, name: string, label: string, placeholder: string }) {
 
 
     return <FormField

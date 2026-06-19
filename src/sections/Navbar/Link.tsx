@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LinkType } from "@/types/Link";
 
 
-export default function ({ link: { link, placeholder } }: { link: LinkType }) {
+export default function NavbarLink({ link: { link, placeholder } }: { link: LinkType }) {
 
 
     return <Link href={link} className="h-fit group">

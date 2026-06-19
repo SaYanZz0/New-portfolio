@@ -1,4 +1,4 @@
-export default function () {
+export default function FormHeader() {
     return <div className=" space-y-4 my-5 px-4">
         <h3 className="font-bold text-4xl">
             Get in touch with me

@@ -12,7 +12,7 @@ import { object, string } from "yup"
 import { useToast } from "@/components/ui/use-toast"
 
 
-export default function () {
+export default function ContactForm() {
     const { toast } = useToast()
     const contactFormSchema = object({
         email: string().email().required("Please enter a vaild email"),

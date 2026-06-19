@@ -78,7 +78,7 @@ const CTAs = () => {
   );
 };
 
-export default function () {
+export default function Navbar() {
   return (
     <nav className="border-b border-black inline-flex justify-between items-center w-full px-4 py-4 sm:px-20 lg:px-40 max-w-[2000px] m-auto">
       <Logo />

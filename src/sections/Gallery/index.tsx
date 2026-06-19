@@ -8,8 +8,7 @@ import Sales from "@/images/Sales.png";
 import Churn from "@/images/churn prediction.png";
 import Patent  from "@/images/patent.png";
 
-// eslint-disable-next-line import/no-anonymous-default-export
-export default function () {
+export default function Gallery() {
   let Projects: Array<ProjectType> = [
     {
       image: apartmentAnalytics,

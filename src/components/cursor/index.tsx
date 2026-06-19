@@ -2,7 +2,7 @@
 import { motion, useMotionValue, useSpring } from "framer-motion"
 import { useEffect, useState } from "react"
 
-export default function () {
+export default function Cursor() {
     // Core cursor position
     const cursorX = useMotionValue(-100)
     const cursorY = useMotionValue(-100)
@@ -114,7 +114,7 @@ export default function () {
                 element.removeEventListener('mouseleave', handleElementMouseLeave as EventListener)
             })
         }
-    }, [linkHovered])
+    }, [linkHovered, cursorX, cursorY])
 
     return (
         <>

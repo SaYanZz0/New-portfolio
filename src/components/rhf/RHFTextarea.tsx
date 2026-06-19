@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "../ui/textarea"
-export default function ({ form, name, placeholder, label }: { form: any, name: string, label: string, placeholder: string }) {
+export default function RHFTextarea({ form, name, placeholder, label }: { form: any, name: string, label: string, placeholder: string }) {
     return <FormField
         control={form.control}
         name={name}

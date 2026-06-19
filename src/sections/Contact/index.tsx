@@ -4,7 +4,7 @@ import Form from "./Form";
 import FormHeader from "./FormHeader";
 
 
-export default function () {
+export default function Contact() {
 
     return <main id="Contact" className="flex flex-col text-center sm:text-start sm:flex-row items-center justify-between w-full px-4 py-4 sm:px-20 lg:px-40 max-w-[2000px] m-auto bg-primary text-white">
         <FormHeader />
