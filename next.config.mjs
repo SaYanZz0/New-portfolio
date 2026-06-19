@@ -30,6 +30,10 @@ class VeliteWebpackPlugin {
 
 nextConfigWithPWA.webpack = (config) => {
   config.plugins.push(new VeliteWebpackPlugin());
+  config.ignoreWarnings = [
+    { module: /velite/ },
+    { message: /build dependencies failed at/ }
+  ];
   return config;
 };
 
