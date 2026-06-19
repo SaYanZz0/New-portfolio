@@ -9,13 +9,33 @@ export default function () {
   const data = [
     {
       orientation: "left",
-      title: "Computer science student",
-      company: "ESTIN",
-      link: "https://estin.dz",
+      title: "Data Consultant",
+      company: "AVISIA",
+      link: "https://www.avisia.fr/",
       description:
-        "Embarked on my computer science journey @ESTIN, diving into programming, algorithms, and tech foundations.",
-      mounth: "Dec",
-      year: 2020,
+        "Contributed to the design and maintenance of scalable data pipelines for a banking client. Developed and optimized data workflows using Python and SQL to process, transform, and integrate financial and customer data, ensuring data quality and reliability for analytics and business operations.",
+      mounth: "MAR",
+      year: 2026,
+    },
+        {
+      title: "Research Intern",
+      company: "LIRIS laboratory",
+      link: "https://liris.cnrs.fr/",
+      description:
+        "In this internship, I will focus on the dynamic construction of social communities by leveraging machine learning algorithms. The objective is to develop models that can automatically detect, form, and evolve communities within a social network based on user interactions, behaviors, and shared interests.",
+      mounth: "Mar - Aug",
+      orientation: "right",
+      year: 2025,
+    },
+    {
+      title: "Data Engineer / BI Intern",
+      company: "NATIXIS",
+      link: "https://www.interepargne.natixis.com/",
+      description:
+        "Collected, integrated, and transformed data from CRM and ERP systems through ETL processes. Designed and implemented a Data Warehouse using SQL Server and Power BI, and developed interactive dashboards to support data-driven decision-making and business reporting.",
+      mounth: "Jun - Sep",
+      orientation: "left",
+      year: 2024,
     },
     {
       title: "Software ingenieur",
@@ -26,26 +46,6 @@ export default function () {
         "in this internship we are developing a finance app called FinSaver using Flutter and Node.js/Express.js designed to help users track their expenses and set savings goals for specific purposes",
       orientation: "right",
       year: 2023,
-    },
-    {
-      title: "Intern",
-      company: "WADIFNY",
-      link: "https://wadifny.com/en",
-      description:
-        "As a Digital Launch Intern at Wadifny, i was so happy to collaborate with my team to test and host company's website and mobile app. Collaborating closely with a talented team",
-      mounth: "Sep - Nov",
-      orientation: "left",
-      year: 2023,
-    },
-    {
-      title: "Research Intern",
-      company: "LIRIS laboratory",
-      link: "https://liris.cnrs.fr/",
-      description:
-        "In this internship, I will focus on the dynamic construction of social communities by leveraging machine learning algorithms. The objective is to develop models that can automatically detect, form, and evolve communities within a social network based on user interactions, behaviors, and shared interests.",
-      mounth: "Mar - now",
-      orientation: "right",
-      year: 2025,
     },
   ];
 

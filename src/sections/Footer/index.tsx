@@ -72,7 +72,7 @@ export default function () {
           />
         </div>
       </div>
-      <div className="mt-10">© 2024 Khalil Ferhati. All rights reserved.</div>
+      <div className="mt-10">© 2026 Khalil Ferhati. All rights reserved.</div>
     </footer>
   );
 }
